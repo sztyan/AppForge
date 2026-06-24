@@ -1,36 +1,150 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AppForge
 
-## Getting Started
+AppForge is a metadata-driven application builder built with Next.js, TypeScript, Prisma, Neon PostgreSQL, and NextAuth Google OAuth. It enables teams to design, preview, and run dynamic forms, dashboards, workflows, and data-driven applications without writing extensive custom frontend code.
 
-First, run the development server:
+## Project Overview
+
+AppForge transforms a JSON-based schema into a full application experience. Users can define data models, forms, tables, workflows, and runtime behavior in a visual builder, then publish and run the generated app instantly.
+
+The platform is designed for rapid prototyping, internal tools, business workflows, and configurable data entry systems.
+
+## Architecture
+
+AppForge is structured around a schema-driven architecture:
+
+- Frontend: Next.js App Router with TypeScript
+- UI Builder: JSON schema editor and live preview workspace
+- Runtime Renderer: renders forms, tables, and dashboards from schema definitions
+- Data Layer: Prisma ORM with Neon PostgreSQL for persistent application and submission storage
+- Authentication: NextAuth with Google OAuth for secure sign-in and user-scoped access
+- API Layer: dynamic API generation for applications and their data endpoints
+
+### Core Flow
+
+1. Define an application schema in the builder.
+2. Preview the generated experience in real time.
+3. Publish or run the application in runtime mode.
+4. Persist app data and submissions in PostgreSQL.
+5. Authenticate users through Google OAuth and scope content to the signed-in user.
+
+## Features
+
+- Metadata-driven app generation
+- JSON schema builder
+- Live preview
+- Runtime renderer
+- Dashboard support
+- Table support
+- CSV import
+- Multi-language support
+- Workflow automation
+- Dynamic API generation
+- PostgreSQL persistence
+- Google Authentication
+- User-scoped application ownership and access control
+
+## Tech Stack
+
+- Next.js
+- TypeScript
+- Prisma
+- Neon PostgreSQL
+- NextAuth
+- Google OAuth
+- Tailwind CSS
+- shadcn/ui
+
+## Setup Instructions
+
+### Prerequisites
+
+- Node.js 20 or later
+- npm, pnpm, or yarn
+- A Neon PostgreSQL database
+- A Google Cloud OAuth application
+
+### Installation
+
+```bash
+git clone https://github.com/your-username/appforge.git
+cd appforge
+npm install
+```
+
+### Database Setup
+
+Generate the Prisma client and push the schema:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+Optional seed and migration helpers:
+
+```bash
+npm run db:seed
+npm run db:migrate-json
+```
+
+### Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a .env.local file in the project root with the following variables:
 
-## Learn More
+```env
+DATABASE_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-long-random-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- NEXTAUTH_SECRET should be a long random string.
+- GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET come from your Google Cloud Console OAuth credentials.
+- DATABASE_URL should point to your Neon PostgreSQL instance.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Google OAuth Setup
 
-## Deploy on Vercel
+1. Create a project in Google Cloud Console.
+2. Enable the Google OAuth consent screen.
+3. Create OAuth 2.0 Client ID credentials.
+4. Add the following redirect URI:
+   - http://localhost:3000/api/auth/callback/google
+5. Copy the client ID and client secret into your environment variables.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Screenshots
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Screenshots will be added here as the product UI evolves.
+
+Suggested areas to capture:
+- Builder workspace
+- Live preview mode
+- Runtime renderer
+- Application dashboard
+- Authentication sign-in flow
+
+## Future Improvements
+
+Planned enhancements include:
+
+- Improved role-based access control (RBAC)
+- Advanced workflow execution and monitoring
+- Richer component library and visual editing experiences
+- Export/import of application definitions
+- Audit logs and activity tracking
+- Deployment templates for production hosting
+- Better analytics and reporting dashboards
+
+## License
+
+This project is currently under active development. Add your preferred license file if you plan to distribute or reuse it publicly.
