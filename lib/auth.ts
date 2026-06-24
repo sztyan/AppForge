@@ -1,10 +1,11 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions, type Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { getServerSession as nextAuthGetServerSession } from "next-auth/next";
+import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 
-const logFullError = (label: string, error: any, extra?: any) => {
+const logFullError = (label: string, error: unknown, extra?: unknown) => {
   console.error(label);
   if (error instanceof Error) {
     console.error(error.stack ?? error.message ?? error);
@@ -16,15 +17,15 @@ const logFullError = (label: string, error: any, extra?: any) => {
   }
 };
 
-let _prismaAdapter: any;
+let _prismaAdapter: Adapter | undefined;
 try {
-  _prismaAdapter = PrismaAdapter(prisma);
-} catch (e: any) {
-  logFullError("PrismaAdapter initialization failed:", e);
+  _prismaAdapter = PrismaAdapter(prisma) as Adapter;
+} catch (error) {
+  logFullError("PrismaAdapter initialization failed:", error);
   _prismaAdapter = undefined;
 }
 
-const wrapAdapter = (adapter: any) => {
+const wrapAdapter = (adapter?: Adapter) => {
   if (!adapter) return undefined;
 
   return new Proxy(adapter, {
@@ -32,12 +33,12 @@ const wrapAdapter = (adapter: any) => {
       const value = Reflect.get(target, prop, receiver);
       if (typeof value !== "function") return value;
 
-      return async (...args: any[]) => {
+      return async (...args: unknown[]) => {
         try {
           return await value.apply(target, args);
-        } catch (e: any) {
-          logFullError(`Prisma adapter method "${String(prop)}" failed:`, e, { args });
-          throw e;
+        } catch (error) {
+          logFullError(`Prisma adapter method "${String(prop)}" failed:`, error, { args });
+          throw error;
         }
       };
     },
@@ -46,7 +47,7 @@ const wrapAdapter = (adapter: any) => {
 
 const wrappedAdapter = wrapAdapter(_prismaAdapter);
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: wrappedAdapter,
   debug: true,
   providers: [
@@ -56,20 +57,17 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, profile, trigger, isNewUser }: any) {
+    async jwt({ token, user }) {
       try {
         return token;
-      } catch (e: any) {
-        logFullError("NextAuth jwt callback error:", e, {
+      } catch (error) {
+        logFullError("NextAuth jwt callback error:", error, {
           user: user?.email,
-          provider: account?.provider,
-          trigger,
-          isNewUser,
         });
-        throw e;
+        throw error;
       }
     },
-    async session({ session, token, user }: any) {
+    async session({ session, user }) {
       try {
         return {
           ...session,
@@ -79,15 +77,14 @@ export const authOptions = {
             email: user.email,
           },
         };
-      } catch (e: any) {
-        logFullError("NextAuth session callback error:", e, {
+      } catch (error) {
+        logFullError("NextAuth session callback error:", error, {
           user: user?.email,
-          tokenEmail: token?.email,
         });
-        throw e;
+        throw error;
       }
     },
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user, account, profile }) {
       try {
         console.log("NextAuth signIn callback", {
           user: user?.email,
@@ -95,20 +92,17 @@ export const authOptions = {
           profileEmail: profile?.email,
         });
         return true;
-      } catch (e: any) {
-        logFullError("NextAuth signIn callback error:", e, {
+      } catch (error) {
+        logFullError("NextAuth signIn callback error:", error, {
           user: user?.email,
           provider: account?.provider,
         });
-        throw e;
+        throw error;
       }
     },
   },
   events: {
-    async error(payload: any) {
-      logFullError("NextAuth event error:", payload?.error ?? payload, payload);
-    },
-    async signIn(message: any) {
+    async signIn(message) {
       console.log("NextAuth event signIn:", {
         user: message.user?.email,
         provider: message.account?.provider,
@@ -117,20 +111,20 @@ export const authOptions = {
     },
   },
   logger: {
-    error(code: any, metadata?: any) {
+    error(code, metadata) {
       console.error("NextAuth logger error:", code, metadata);
     },
-    warn(code: any) {
+    warn(code) {
       console.warn("NextAuth logger warn:", code);
     },
-    debug(code: any) {
+    debug(code) {
       console.debug("NextAuth logger debug:", code);
     },
   },
 };
 
-export async function getServerAuthSession() {
-  return nextAuthGetServerSession(authOptions as any);
+export async function getServerAuthSession(): Promise<Session | null> {
+  return nextAuthGetServerSession(authOptions);
 }
 
-export default NextAuth(authOptions as any);
+export default NextAuth(authOptions);
